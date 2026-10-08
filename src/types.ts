@@ -18,3 +18,7 @@ export interface Book {
 	title: string;
 	isAvailable: boolean;
 }
+
+export interface TelegramUpdate {
+	message?: { chat: { id: number }; text?: string };
+}

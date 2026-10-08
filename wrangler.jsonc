@@ -1,0 +1,19 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "pusnasie",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"observability": {
+		"enabled": true,
+	},
+	"upload_source_maps": true,
+	"kv_namespaces": [
+		{
+			"binding": "PUSNASIE_KV",
+			"id": "93c1bc67c4c74e0995cf3feb9322eb91",
+		},
+	],
+	"triggers": {
+		"crons": ["* * * * *"],
+	},
+}

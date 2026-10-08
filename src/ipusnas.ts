@@ -1,7 +1,7 @@
 import { IPUSNAS_BASE_ENDPOINT, TOKEN_REFRESH_MARGIN_MS } from './config';
 import { formatTitle } from './helpers';
 import { readAuth, saveAuth } from './storage';
-import { Auth, Book, SearchedBook } from './types';
+import { Auth, Book, BookSummary } from './types';
 
 interface LoginResponse {
 	data: {
@@ -14,12 +14,13 @@ interface CheckBookResponse {
 	data: {
 		id: string;
 		book_title: string;
+		book_author: string;
 		available_qts: number;
 	};
 }
 
 interface SearchBooksResponse {
-	data: [{ id: string; book_title: string }];
+	data: [{ id: string; book_title: string; author_name: string }];
 }
 
 async function getJson<T>(path: string, init: RequestInit, label: string): Promise<T> {
@@ -63,11 +64,12 @@ export async function checkBook(token: string, bookId: string): Promise<Book> {
 	return {
 		id: data.id,
 		title: formatTitle(data.book_title),
+		author: data.book_author,
 		isAvailable: data.available_qts > 0,
 	};
 }
 
-export async function searchBooks(token: string, bookTitle: string): Promise<SearchedBook[]> {
+export async function searchBooks(token: string, bookTitle: string): Promise<BookSummary[]> {
 	const { data } = await getJson<SearchBooksResponse>(
 		`/webhook/search-book?limit=25&offset=0&q=${bookTitle}`,
 		{
@@ -78,9 +80,10 @@ export async function searchBooks(token: string, bookTitle: string): Promise<Sea
 		},
 		`Search books for ${bookTitle}`,
 	);
-	return data.map(({ id, book_title }) => ({
+	return data.map(({ id, book_title, author_name }) => ({
 		id,
 		title: formatTitle(book_title),
+		author: author_name,
 	}));
 }
 

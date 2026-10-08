@@ -3,19 +3,13 @@ export interface Auth {
 	expiredAt: number;
 }
 
-export interface WatchedBook {
+export interface BookSummary {
 	id: string;
 	title: string;
+	author: string;
 }
 
-export interface SearchedBook {
-	id: string;
-	title: string;
-}
-
-export interface Book {
-	id: string;
-	title: string;
+export interface Book extends BookSummary {
 	isAvailable: boolean;
 }
 

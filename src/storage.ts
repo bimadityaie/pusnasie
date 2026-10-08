@@ -1,12 +1,12 @@
 import { KV_KEYS } from './config';
-import { Auth, WatchedBook } from './types';
+import { Auth, BookSummary } from './types';
 
 async function readJson<T>(kv: KVNamespace, key: string): Promise<any> {
 	return kv.get<T>(key, 'json');
 }
 
 async function writeJson<T>(kv: KVNamespace, key: string, value: T): Promise<void> {
-	return kv.put(key, JSON.stringify(value));
+	await kv.put(key, JSON.stringify(value));
 }
 
 export async function readAuth(kv: KVNamespace): Promise<Auth | null> {
@@ -17,10 +17,10 @@ export async function saveAuth(kv: KVNamespace, auth: Auth): Promise<void> {
 	await writeJson(kv, KV_KEYS.auth, auth);
 }
 
-export async function readWatchList(kv: KVNamespace): Promise<WatchedBook[]> {
-	return (await readJson<WatchedBook[]>(kv, KV_KEYS.watchList)) ?? [];
+export async function readWatchList(kv: KVNamespace): Promise<BookSummary[]> {
+	return (await readJson<BookSummary[]>(kv, KV_KEYS.watchList)) ?? [];
 }
 
-export async function saveWatchList(kv: KVNamespace, watchList: WatchedBook[]): Promise<void> {
+export async function saveWatchList(kv: KVNamespace, watchList: BookSummary[]): Promise<void> {
 	await writeJson(kv, KV_KEYS.watchList, watchList);
 }

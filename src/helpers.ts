@@ -1,3 +1,13 @@
+import { BookSummary } from './types';
+
+export function findBook(list: BookSummary[], bookTitle: string): BookSummary | undefined {
+	return list.find((book) => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
+}
+
+export function bookExists(list: BookSummary[], bookTitle: string): boolean {
+	return Boolean(findBook(list, bookTitle));
+}
+
 const SMALL_WORDS = new Set([
 	// Indonesian
 	'di',
@@ -37,7 +47,9 @@ const SMALL_WORDS = new Set([
 	'vs',
 ]);
 
-const capitalize = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+function capitalize(word: string) {
+	return word.charAt(0).toUpperCase() + word.slice(1);
+}
 
 function formatPart(part: string, isFirst: boolean, isAllCaps: boolean): string {
 	const lower = part.toLowerCase();
@@ -68,4 +80,12 @@ export function formatTitle(raw: string): string {
 		.split(/\s+/)
 		.map((word, i) => formatWord(word, i === 0, isAllCaps))
 		.join(' ');
+}
+
+export function escapeHtml(text: string): string {
+	return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+export function bold(text: string) {
+	return `<b>${escapeHtml(text)}</b>`;
 }

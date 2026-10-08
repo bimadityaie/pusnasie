@@ -1,4 +1,5 @@
 import { IPUSNAS_BASE_ENDPOINT, TOKEN_REFRESH_MARGIN_MS } from './config';
+import { formatTitle } from './helpers';
 import { readAuth, saveAuth } from './storage';
 import { Auth, Book, SearchedBook } from './types';
 
@@ -61,7 +62,7 @@ export async function checkBook(token: string, bookId: string): Promise<Book> {
 	);
 	return {
 		id: data.id,
-		title: data.book_title,
+		title: formatTitle(data.book_title),
 		isAvailable: data.available_qts > 0,
 	};
 }
@@ -77,9 +78,9 @@ export async function searchBooks(token: string, bookTitle: string): Promise<Sea
 		},
 		`Search books for ${bookTitle}`,
 	);
-	return data.map((book) => ({
-		id: book.id,
-		title: book.book_title,
+	return data.map(({ id, book_title }) => ({
+		id,
+		title: formatTitle(book_title),
 	}));
 }
 

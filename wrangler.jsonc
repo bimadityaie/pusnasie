@@ -11,6 +11,7 @@
 		{
 			"binding": "PUSNASIE_KV",
 			"id": "93c1bc67c4c74e0995cf3feb9322eb91",
+			"remote": true,
 		},
 	],
 	"triggers": {

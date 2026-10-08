@@ -15,7 +15,7 @@ interface CheckBookResponse {
 		id: string;
 		book_title: string;
 		book_author: string;
-		available_qts: number;
+		available_qty: number;
 	};
 }
 
@@ -50,25 +50,6 @@ export async function login(env: Env): Promise<Auth> {
 	};
 }
 
-export async function checkBook(token: string, bookId: string): Promise<Book> {
-	const { data } = await getJson<CheckBookResponse>(
-		`/webhook/book-detail?book_id=${bookId}`,
-		{
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-		`Book ${bookId} check`,
-	);
-	return {
-		id: data.id,
-		title: formatTitle(data.book_title),
-		author: data.book_author,
-		isAvailable: data.available_qts > 0,
-	};
-}
-
 export async function searchBooks(token: string, bookTitle: string): Promise<BookSummary[]> {
 	const { data } = await getJson<SearchBooksResponse>(
 		`/webhook/search-book?limit=25&offset=0&q=${bookTitle}`,
@@ -85,6 +66,25 @@ export async function searchBooks(token: string, bookTitle: string): Promise<Boo
 		title: formatTitle(book_title),
 		author: author_name,
 	}));
+}
+
+export async function checkBook(token: string, bookId: string): Promise<Book> {
+	const { data } = await getJson<CheckBookResponse>(
+		`/webhook/book-detail?book_id=${bookId}`,
+		{
+			method: 'GET',
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		},
+		`Book ${bookId} check`,
+	);
+	return {
+		id: data.id,
+		title: formatTitle(data.book_title),
+		author: data.book_author,
+		isAvailable: data.available_qty > 0,
+	};
 }
 
 function isFresh(auth: Auth): boolean {

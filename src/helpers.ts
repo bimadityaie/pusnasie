@@ -1,4 +1,4 @@
-import { BookSummary } from './types';
+import { BookSummary, TelegramUpdate } from './types';
 
 export function findBook(list: BookSummary[], bookTitle: string): BookSummary | undefined {
 	return list.find((book) => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
@@ -88,4 +88,9 @@ export function escapeHtml(text: string): string {
 
 export function bold(text: string) {
 	return `<b>${escapeHtml(text)}</b>`;
+}
+
+export function getOwnerText(env: Env, { message }: TelegramUpdate): string | null {
+	if (!message || !message.text) return null;
+	return String(message.chat.id) === env.TELEGRAM_CHAT_ID ? message.text : null;
 }

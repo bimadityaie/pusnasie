@@ -40,7 +40,7 @@ async function removeBook(env: Env, bookTitle?: string): Promise<string> {
 async function listBooks(env: Env): Promise<string> {
 	const watchList = await readWatchList(env.PUSNASIE_KV);
 	return watchList.length > 0
-		? `Watched books:\n${watchList.map((watchedBook, index) => `${index + 1}. ${watchedBook.title} by ${watchedBook.author}`).join('\n')}`
+		? `Watched books:\n\n${watchList.map((watchedBook, index) => `${index + 1}. ${watchedBook.title} by ${watchedBook.author}`).join('\n')}`
 		: 'No books in the watch list.';
 }
 

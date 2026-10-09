@@ -1,4 +1,4 @@
-import { Book, BookSummary, InlineKeyboard, ListEntry, Reply, TelegramUpdate } from './types';
+import { Book, BookSummary, InlineKeyboard, ListEntry, Reply } from './types';
 
 export function findBook(list: BookSummary[], title: string): BookSummary | undefined {
 	return list.find((book) => book.title.toLowerCase().includes(title.toLowerCase()));
@@ -98,18 +98,13 @@ export function isOwner(env: Env, chatId?: number): boolean {
 	return String(chatId) === env.TELEGRAM_CHAT_ID;
 }
 
-export function getOwnerText(env: Env, { message }: TelegramUpdate): string | null {
-	if (!message || !message.text) return null;
-	return isOwner(env, message.chat.id) ? message.text : null;
-}
-
 export function statusIcon(isAvailable?: boolean): string {
 	return isAvailable === undefined ? '⌛' : isAvailable ? '🟢' : '🔴';
 }
 
 export const messages = {
-	usage(command: string, param: string): string {
-		return `💡 Usage: ${code(`${command} <${param}>`)}`;
+	usage(command: string, params: string[]): string {
+		return `💡 Usage: ${code(`${command} ${params.map((param) => `<${param}>`).join('/')}`)}`;
 	},
 
 	help(): string {
@@ -117,7 +112,7 @@ export const messages = {
 			'🤖 Ipusnas Watcher',
 			'I check your books every minute and tell you when one is available.',
 			[
-				`🔎 ${code('/add <title>')} search and watch a book`,
+				`🔎 ${code('/add <title>/<author>')} search and watch a book`,
 				`➕ ${code('/addid <bookId>')} search by book ID and watch a book`,
 				`🗑️ ${code('/remove <title>')} stop watching a book`,
 				`📚 ${code('/list')} show your watch list`,
@@ -133,8 +128,8 @@ export const messages = {
 		return `❌ Could not find a book with ID ${code(id)}.`;
 	},
 
-	noResults(title: string): string {
-		return `🔍 No books found for ${bold(title)}. Try a shorter title.`;
+	noResults(query: string): string {
+		return `🔍 No books found for ${bold(query)}.`;
 	},
 
 	alreadyWatching(title: string): string {
@@ -189,4 +184,8 @@ export function reply(text: string, keyboard?: InlineKeyboard): Reply {
 		text,
 		keyboard,
 	};
+}
+
+export function compareByTitle(book: BookSummary, comparedBook: BookSummary) {
+	return book.title.localeCompare(comparedBook.title, 'id', { sensitivity: 'base' });
 }

@@ -1,4 +1,5 @@
 import { KV_KEYS } from './config';
+import { compareByTitle } from './helpers';
 import { Auth, BookSummary, StatusMap } from './types';
 
 async function readJson<T>(kv: KVNamespace, key: string): Promise<any> {
@@ -21,8 +22,8 @@ export async function readWatchList(kv: KVNamespace): Promise<BookSummary[]> {
 	return (await readJson<BookSummary[]>(kv, KV_KEYS.watchList)) ?? [];
 }
 
-export async function saveWatchList(kv: KVNamespace, watchList: BookSummary[]): Promise<void> {
-	await writeJson(kv, KV_KEYS.watchList, watchList);
+export async function saveWatchList(kv: KVNamespace, books: BookSummary[]): Promise<void> {
+	await writeJson(kv, KV_KEYS.watchList, [...books].sort(compareByTitle));
 }
 
 export async function readStatuses(kv: KVNamespace): Promise<StatusMap> {

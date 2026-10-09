@@ -16,7 +16,7 @@ async function addBookToWatchList(env: Env, book: BookSummary): Promise<Reply> {
 }
 
 async function addBookById(env: Env, bookId?: string): Promise<Reply> {
-	if (!bookId) return reply(messages.usage('/addid', 'bookId'));
+	if (!bookId) return reply(messages.usage('/addid', ['bookId']));
 
 	const token = await getAccessToken(env);
 	const book = await checkBook(token, bookId).catch(() => null);
@@ -26,7 +26,7 @@ async function addBookById(env: Env, bookId?: string): Promise<Reply> {
 }
 
 async function addBook(env: Env, query?: string): Promise<Reply> {
-	if (!query) return reply(messages.usage('/add', 'title'));
+	if (!query) return reply(messages.usage('/add', ['title', 'author']));
 
 	const token = await getAccessToken(env);
 	const searchedBooks = await searchBooks(token, query);
@@ -40,7 +40,7 @@ async function addBook(env: Env, query?: string): Promise<Reply> {
 }
 
 async function removeBook(env: Env, title?: string): Promise<Reply> {
-	if (!title) return reply(messages.usage('/remove', 'title'));
+	if (!title) return reply(messages.usage('/remove', ['title']));
 
 	const watchList = await readWatchList(env.PUSNASIE_KV);
 	const book = findBook(watchList, title);

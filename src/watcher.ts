@@ -41,10 +41,10 @@ export async function runWatcher(env: Env): Promise<void> {
 	if (watchList.length === 0) return;
 
 	const token = await getAccessToken(env);
-	const settledResult = await Promise.allSettled(watchList.map((watchedBook) => checkBook(token, watchedBook.id)));
+	const settledResults = await Promise.allSettled(watchList.map((watchedBook) => checkBook(token, watchedBook.id)));
 
 	const prev = await readStatuses(env.PUSNASIE_KV);
-	const books = collectSuccessful(watchList, settledResult, prev);
+	const books = collectSuccessful(watchList, settledResults, prev);
 	const { next, newlyAvailable } = diffStatuses(watchList, books, prev);
 
 	if (newlyAvailable.length > 0) {

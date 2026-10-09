@@ -17,8 +17,32 @@ export type BookState = Pick<Book, 'title' | 'isAvailable'>;
 
 export type StatusMap = Record<Book['id'], BookState>;
 
+export interface InlineButton {
+	text: string;
+	callback_data: string;
+}
+
+export type InlineKeyboard = InlineButton[][];
+
+export interface Reply {
+	text: string;
+	keyboard?: InlineKeyboard;
+}
+
+export interface TelegramMessage {
+	chat: { id: number };
+	text?: string;
+}
+
+export interface TelegramCallbackQuery {
+	id: string;
+	data: string;
+	message?: { chat: { id: number } };
+}
+
 export interface TelegramUpdate {
-	message?: { chat: { id: number }; text?: string };
+	message?: TelegramMessage;
+	callback_query?: TelegramCallbackQuery;
 }
 
 export interface ListEntry {

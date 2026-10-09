@@ -1,11 +1,11 @@
-import { Book, BookSummary, ListEntry, TelegramUpdate } from './types';
+import { Book, BookSummary, InlineKeyboard, ListEntry, Reply, TelegramUpdate } from './types';
 
-export function findBook(list: BookSummary[], bookTitle: string): BookSummary | undefined {
-	return list.find((book) => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
+export function findBook(list: BookSummary[], title: string): BookSummary | undefined {
+	return list.find((book) => book.title.toLowerCase().includes(title.toLowerCase()));
 }
 
-export function bookExists(list: BookSummary[], bookTitle: string): boolean {
-	return Boolean(findBook(list, bookTitle));
+export function bookExists(list: BookSummary[], title: string): boolean {
+	return Boolean(findBook(list, title));
 }
 
 const SMALL_WORDS = new Set([
@@ -94,9 +94,13 @@ export function code(text: string) {
 	return `<code>${escapeHtml(text)}</code>`;
 }
 
+export function isOwner(env: Env, chatId?: number): boolean {
+	return String(chatId) === env.TELEGRAM_CHAT_ID;
+}
+
 export function getOwnerText(env: Env, { message }: TelegramUpdate): string | null {
 	if (!message || !message.text) return null;
-	return String(message.chat.id) === env.TELEGRAM_CHAT_ID ? message.text : null;
+	return isOwner(env, message.chat.id) ? message.text : null;
 }
 
 export function statusIcon(isAvailable?: boolean): string {
@@ -114,6 +118,7 @@ export const messages = {
 			'I check your books every minute and tell you when one is available.',
 			[
 				`🔎 ${code('/add <title>')} search and watch a book`,
+				`➕ ${code('/addid <bookId>')} search by book ID and watch a book`,
 				`🗑️ ${code('/remove <title>')} stop watching a book`,
 				`📚 ${code('/list')} show your watch list`,
 			].join('\n'),
@@ -122,6 +127,10 @@ export const messages = {
 
 	added(title: string, count: number, max: number): string {
 		return `✅ Now watching ${bold(title)}\n📚 ${count}/${max} books in your watch list`;
+	},
+
+	notFound(id: string): string {
+		return `❌ Could not find a book with ID ${code(id)}.`;
 	},
 
 	noResults(title: string): string {
@@ -134,6 +143,10 @@ export const messages = {
 
 	listFull(max: number): string {
 		return `🚫 Your watch list is full (${max} books). Remove one with ${code('/remove <title>')} first.`;
+	},
+
+	pickOne() {
+		return '🔎 Several books match. Which one do you mean?';
 	},
 
 	removed(title: string): string {
@@ -165,4 +178,15 @@ export const messages = {
 		const lines = books.map((book) => `📖 ${bold(book.title)}`).join('\n');
 		return `${heading}\n\n${lines}\n\n🏃 Borrow it before someone else does!`;
 	},
+
+	unknownAction(): string {
+		return '⚠️ Unknown action.';
+	},
 };
+
+export function reply(text: string, keyboard?: InlineKeyboard): Reply {
+	return {
+		text,
+		keyboard,
+	};
+}

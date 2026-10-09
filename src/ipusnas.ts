@@ -1,4 +1,4 @@
-import { IPUSNAS_BASE_ENDPOINT, TOKEN_REFRESH_MARGIN_MS } from './config';
+import { IPUSNAS_BASE_ENDPOINT, SEARCH_LIMIT, SEARCH_OFFSET, TOKEN_REFRESH_MARGIN_MS } from './config';
 import { formatTitle } from './helpers';
 import { readAuth, saveAuth } from './storage';
 import { Auth, Book, BookSummary } from './types';
@@ -50,16 +50,17 @@ export async function login(env: Env): Promise<Auth> {
 	};
 }
 
-export async function searchBooks(token: string, bookTitle: string): Promise<BookSummary[]> {
+export async function searchBooks(token: string, query: string): Promise<BookSummary[]> {
+	const params = new URLSearchParams({ limit: SEARCH_LIMIT.toString(), offset: SEARCH_OFFSET.toString(), q: query });
 	const { data } = await getJson<SearchBooksResponse>(
-		`/webhook/search-book?limit=25&offset=0&q=${bookTitle}`,
+		`/webhook/search-book?${params}`,
 		{
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
 		},
-		`Search books for ${bookTitle}`,
+		`Search books for ${query}`,
 	);
 	return data.map(({ id, book_title, author_name }) => ({
 		id,

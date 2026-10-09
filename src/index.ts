@@ -1,21 +1,35 @@
-import { handleCommand } from './commands';
-import { getOwnerText } from './helpers';
-import { sendMessage } from './telegram';
-import { TelegramUpdate } from './types';
+import { handleCallback, handleCommand } from './commands';
+import { isOwner } from './helpers';
+import { answerCallbackQuery, sendMessage } from './telegram';
+import { TelegramCallbackQuery, TelegramMessage, TelegramUpdate } from './types';
 import { runWatcher } from './watcher';
+
+async function handleMessage(env: Env, message: TelegramMessage): Promise<void> {
+	if (!message.text || !isOwner(env, message.chat.id)) return;
+
+	const { text, keyboard } = await handleCommand(env, message.text);
+	await sendMessage(env, text, keyboard);
+}
+
+async function handleCallbackQuery(env: Env, query: TelegramCallbackQuery): Promise<void> {
+	if (!query.data || !isOwner(env, query.message?.chat.id)) return;
+
+	await answerCallbackQuery(env, query.id).catch((err) => console.error('answerCallbackQuery failed:', err));
+
+	const { text, keyboard } = await handleCallback(env, query.data);
+	await sendMessage(env, text, keyboard);
+}
 
 async function handleWebhook(request: Request, env: Env): Promise<Response> {
 	const secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
 	if (secret !== env.TELEGRAM_WEBHOOK_SECRET) return new Response('Unauthorized', { status: 401 });
 
 	const telegramUpdate = await request.json<TelegramUpdate>();
-	const text = getOwnerText(env, telegramUpdate);
-	if (text) {
-		try {
-			await sendMessage(env, await handleCommand(env, text));
-		} catch (err) {
-			console.error('Command failed:', err);
-		}
+	try {
+		if (telegramUpdate.callback_query) await handleCallbackQuery(env, telegramUpdate.callback_query);
+		else if (telegramUpdate.message) await handleMessage(env, telegramUpdate.message);
+	} catch (err) {
+		console.error('TelegramUpdate failed:', err);
 	}
 
 	return new Response('OK');

@@ -1,47 +1,51 @@
 import { MAX_BOOKS } from './config';
-import { bold, bookExists, escapeHtml, findBook, formatTitle } from './helpers';
+import { bookExists, findBook, messages } from './helpers';
 import { getAccessToken, searchBooks } from './ipusnas';
-import { readWatchList, saveWatchList } from './storage';
+import { readStatuses, readWatchList, saveWatchList } from './storage';
+import { ListEntry } from './types';
 
 type CommandHandler = (env: Env, arg?: string) => Promise<string>;
 
-const HELP_TEXT = 'Commands:\n/add <book title>\n/remove <book title>\n/list';
-
 async function addBook(env: Env, bookTitle?: string): Promise<string> {
-	if (!bookTitle) return escapeHtml('Usage: /add <book title>');
+	if (!bookTitle) return messages.usage('/add', 'book title');
 
 	const token = await getAccessToken(env);
 	const searchedBooks = await searchBooks(token, bookTitle);
 	const book = findBook(searchedBooks, bookTitle);
-	if (!book) return `Book ${bold(formatTitle(bookTitle))} not found.`;
+	if (!book) return messages.noResults(bookTitle);
 
 	const watchList = await readWatchList(env.PUSNASIE_KV);
-	if (bookExists(watchList, book.title)) return `Book ${bold(book.title)} by ${bold(book.author)} is already in the list.`;
-	if (watchList.length >= MAX_BOOKS) return `Cannot add more than ${bold(MAX_BOOKS.toString())} books.`;
+	if (bookExists(watchList, book.title)) return messages.alreadyWatching(book.title);
+	if (watchList.length >= MAX_BOOKS) return messages.listFull(MAX_BOOKS);
 
 	await saveWatchList(env.PUSNASIE_KV, [...watchList, book]);
-	return `Book ${bold(book.title)} by ${bold(book.author)} added to watch list.`;
+	return messages.added(book.title, watchList.length + 1, MAX_BOOKS);
 }
 
 async function removeBook(env: Env, bookTitle?: string): Promise<string> {
-	if (!bookTitle) return escapeHtml('Usage: /remove <book title>');
+	if (!bookTitle) return messages.usage('/remove', 'book title');
 
 	const watchList = await readWatchList(env.PUSNASIE_KV);
 	const book = findBook(watchList, bookTitle);
-	if (!book) return `Book ${bold(bookTitle)} is not in the watch list.`;
+	if (!book) return messages.notInList(bookTitle);
 
 	await saveWatchList(
 		env.PUSNASIE_KV,
 		watchList.filter((watchedBook) => watchedBook.id !== book.id),
 	);
-	return `Book ${bold(book.title)} by ${bold(book.author)} removed from watch list.`;
+	return messages.removed(book.title);
 }
 
 async function listBooks(env: Env): Promise<string> {
-	const watchList = await readWatchList(env.PUSNASIE_KV);
-	return watchList.length > 0
-		? `Watched books:\n\n${watchList.map((watchedBook, index) => `${index + 1}. ${watchedBook.title} by ${watchedBook.author}`).join('\n')}`
-		: 'No books in the watch list.';
+	const [watchList, statuses] = await Promise.all([readWatchList(env.PUSNASIE_KV), readStatuses(env.PUSNASIE_KV)]);
+	if (watchList.length === 0) return messages.emptyList();
+
+	const entries: ListEntry[] = watchList.map((watchedBook) => ({
+		id: watchedBook.id,
+		title: watchedBook.title,
+		isAvailable: statuses[watchedBook.id]?.isAvailable,
+	}));
+	return messages.list(entries, MAX_BOOKS);
 }
 
 export const handlers: Map<string, CommandHandler> = new Map([
@@ -64,5 +68,5 @@ function parseCommand(text: string): { command: string; arg?: string } {
 export async function handleCommand(env: Env, text: string): Promise<string> {
 	const { command, arg } = parseCommand(text);
 	const handler = handlers.get(command);
-	return handler ? handler(env, arg) : escapeHtml(HELP_TEXT);
+	return handler ? handler(env, arg) : messages.help();
 }

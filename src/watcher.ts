@@ -1,4 +1,4 @@
-import { bold } from './helpers';
+import { messages } from './helpers';
 import { checkBook, getAccessToken } from './ipusnas';
 import { readStatuses, readWatchList, saveStatuses } from './storage';
 import { sendMessage } from './telegram';
@@ -13,9 +13,7 @@ export function diffStatuses(watchList: BookSummary[], books: Book[], prev: Stat
 	const newlyAvailable: Book[] = [];
 	for (const book of books) {
 		const wasAvailable = prev[book.id] ? prev[book.id].isAvailable : false;
-
 		next[book.id] = { title: book.title, isAvailable: book.isAvailable };
-
 		if (!wasAvailable && book.isAvailable) newlyAvailable.push(book);
 	}
 
@@ -38,11 +36,6 @@ function collectSuccessful(watchList: BookSummary[], settledResults: PromiseSett
 	return books;
 }
 
-function formatAvailabilityMessage(books: Book[]): string {
-	const list = books.map((book, index) => `${index + 1}. ${bold(book.title)} by ${bold(book.author)}`).join('\n');
-	return `📚 ${books.length} book(s) available!\n\n${list}`;
-}
-
 export async function runWatcher(env: Env): Promise<void> {
 	const watchList = await readWatchList(env.PUSNASIE_KV);
 	if (watchList.length === 0) return;
@@ -55,7 +48,7 @@ export async function runWatcher(env: Env): Promise<void> {
 	const { next, newlyAvailable } = diffStatuses(watchList, books, prev);
 
 	if (newlyAvailable.length > 0) {
-		await sendMessage(env, formatAvailabilityMessage(newlyAvailable));
+		await sendMessage(env, messages.available(newlyAvailable));
 	}
 
 	if (JSON.stringify(prev) !== JSON.stringify(next)) {
